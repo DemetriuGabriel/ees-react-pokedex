@@ -1,73 +1,71 @@
-import {React, useEffect, useState} from 'react';
-import axios from 'axios';
+import { React, useState, useEffect } from 'react';
 
 import Pokemon from './Pokemon';
-import { getPokemonData } from '../api';
+import { getPokemons, getPokemonData } from '../api'
 
 const PokemonList = () => {
-    const [pokemonsList, setPokemonsList] = useState([]);
-    //const [currentPage, setCurrentPage] = useState(1);
-    //const [loading, setLoading] = useState(false);
 
+    const [loading, setLoading] = useState(false);
+    const [pokemons, setPokemons] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
-        const getPokemonsList = async (limit = 20, offset=0) => {
-            //setLoading(true);
-            try {
-                const response = await axios.get(
-                    `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
-                );
-                const {data} = response;
+        console.log("carregou");
 
+        const fetchPokemons = async () => {
+            try {
+                //setLoading(true)
+                const data = await getPokemons(20, (currentPage - 1) * 20);
                 const promises = data.results.map(async (pokemon) => {
                     return await getPokemonData(pokemon.url);
                 });
 
                 const results = await Promise.all(promises)
-
-                setPokemonsList(results);
-                //setLoading(false);
-                //setCurrentPage((prevPage) => prevPage + 1);
+            
+                setPokemons((prevList) => [...prevList, ...results]);
+                setLoading(false);
 
             } catch (error) {
-                console.error('Error Fetching Pokemon List', error)
-                //setLoading(false);
+                console.log("fetch pokemons error: ", error)
             }
-        };
+        }
 
-        getPokemonsList();
-    }, [pokemonsList /*currentPage*/]);
+        fetchPokemons();
+    }, [currentPage]);
 
-    /*useEffect(() => {
-        const handleScroll = () => {
-            if (
-                window.innerHeight + document.documentElement.scrollTop ===
-                document.documentElement.scrollHeight
-            ) {
-                getPokemonsList();
-            }
-        };
+    const handleScroll = () => {
+        const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+            // When the user scrolls to the bottom 100px of the page, load more Pokémon
+            setCurrentPage((prevPage) => prevPage + 1);
+        }
+    };
 
+    useEffect(() => {
         window.addEventListener('scroll', handleScroll);
 
         return () => {
             window.removeEventListener('scroll', handleScroll);
-        }
-    }, [currentPage]);*/
+        };
+    }, []);
 
     return (
         <div>
-            <h2>Pokedex</h2>
-            <div className="pokedexgrid">
-                {pokemonsList && pokemonsList.map((pokemon, index) => {
-                    return (
-                        <Pokemon key={index} pokemon={pokemon} />
-                    );
-                })}
+            <div className="pokedex-header">
+                <h2>Pokedex</h2>
             </div>
+            {loading ? (<h3>Carregando!</h3>
+            ) : (
+                <div className="pokedex-grid">
+                    {pokemons && pokemons.map((pokemon, index) => {
+                        return (
+                            <Pokemon key={index} pokemon={pokemon} />
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
-
 };
 
 export default PokemonList;

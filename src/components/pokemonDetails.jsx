@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { searchPokemon } from '../api';
+import Pokemon from './Pokemon';
 
 const PokemonDetails = () => {
   const [pokemonNumber, setPokemonNumber] = useState('');
   const [pokemon, setPokemon] = useState('');
-  const [pokemonTypes, setPokemonTypes] = useState([]);
   const [updatePokemon, setUpdatePokemon] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchPokemonDetails = async () => {
       try {
         if (!pokemonNumber) {
           setPokemon('');
-          setPokemonTypes([]);
           return;
         }
 
-        const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${pokemonNumber}`);
-        const { data } = response;
+        setLoading(true);
+        const data = await searchPokemon(pokemonNumber);
         setPokemon(data);
-
-        const types = data.types.map((typeInfo) => typeInfo.type.name);
-        setPokemonTypes(types);
+        setLoading(false)
 
       } catch (error) {
         console.error('Error fetching Pokemon details:', error);
@@ -52,19 +50,11 @@ const PokemonDetails = () => {
         placeholder="Enter Pokémon number"
       />
       <button onClick={handleUpdateClick}>Atualizar Pokémon</button>
-      <div>
-        {pokemon.name ? <h2>Pokémon Name: {pokemon.name}</h2> : <p>No Pokémon found</p>}
-        {pokemonTypes.length > 0 && (
-          <div>
-            <h3>Types:</h3>
-            <ul>
-              {pokemonTypes.map((type) => (
-                <li key={type}>{type}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      {loading ? (<h2>Carregando!</h2>) : (
+        <div>
+          {pokemon ? <Pokemon pokemon={pokemon} /> : <h2>Pokémon not found!</h2>}
+        </div>
+      )}
     </div>
   );
 };

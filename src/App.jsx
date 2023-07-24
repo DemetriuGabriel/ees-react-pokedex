@@ -1,10 +1,11 @@
-import {React} from 'react'
+import { React } from 'react'
 import './App.css'
 import PokemonDetails from './components/pokemonDetails'
 import PokemonList from './components/pokemonList'
 
-function App() {
 
+function App() {
+  
   return (
     <>
       <div className="card">
